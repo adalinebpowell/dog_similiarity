@@ -1,0 +1,174 @@
+from IPython.display import HTML
+
+HTML('''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dog Breed Similarity Finder</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f6f6f6;
+        padding: 30px;
+    }
+    h2 { color: #333; }
+    select {
+        padding: 10px;
+        font-size: 16px;
+        width: 350px;
+    }
+    #results {
+        margin-top: 20px;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        width: 350px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin-bottom: 6px; }
+</style>
+</head>
+
+<body>
+
+<h2>Dog Breed Similarity Finder</h2>
+
+<label><strong>Select a breed:</strong></label><br><br>
+
+<select id="breedDropdown">
+    <option value="">-- Choose a breed --</option>
+</select>
+
+<div id="results"></div>
+
+<script>
+// --------------------------------------------
+// FULL SIMILARITY DATA (from your notebook)
+// --------------------------------------------
+const similarityData = {
+    "Border Terrier": ["Australian Terrier","Cairn Terrier","Affenpinscher","Dandie Dinmont Terrier","Norfolk Terrier"],
+    "Cairn Terrier": ["Border Terrier","Australian Terrier","West Highland White Terrier","Affenpinscher","Miniature Schnauzer"],
+    "Siberian Husky": ["Whippet","Saluki","Boxer","English Cocker Spaniel","Brittany"],
+    "Welsh Springer Spaniel": ["Samoyed","Chesapeake Bay Retriever","Gordon Setter","Clumber Spaniel","English Cocker Spaniel"],
+    "English Cocker Spaniel": ["Brittany","Flat-Coated Retriever","English Springer Spaniel","Clumber Spaniel","Siberian Husky"],
+    "Cocker Spaniel": ["English Cocker Spaniel","English Springer Spaniel","Shetland Sheepdog","Brittany","German Shorthaired Pointer"],
+    "Lhasa Apso": ["Tibetan Terrier","Tibetan Spaniel","Bichon Frise","Pug","Dandie Dinmont Terrier"],
+    "English Springer Spaniel": ["English Cocker Spaniel","Brittany","Flat-Coated Retriever","Welsh Springer Spaniel","Cocker Spaniel"],
+    "Shetland Sheepdog": ["Cocker Spaniel","Papillon","Border Collie","Pembroke Welsh Corgi","Australian Cattle Dog"],
+    "West Highland White Terrier": ["Bedlington Terrier","Border Terrier","Cairn Terrier","Tibetan Spaniel","Bichon Frise"],
+    "Brittany": ["English Cocker Spaniel","Flat-Coated Retriever","English Springer Spaniel","Clumber Spaniel","Siberian Husky"],
+    "German Shorthaired Pointer": ["Pointer","Chesapeake Bay Retriever","Gordon Setter","Welsh Springer Spaniel","English Cocker Spaniel"],
+    "Pointer": ["German Shorthaired Pointer","Chesapeake Bay Retriever","Gordon Setter","Akita","Welsh Springer Spaniel"],
+    "Tibetan Spaniel": ["Bichon Frise","Tibetan Terrier","English Toy Spaniel","Border Terrier","Siberian Husky"],
+    "Labrador Retriever": ["Golden Retriever","Welsh Springer Spaniel","English Cocker Spaniel","English Springer Spaniel","Brittany"],
+    "Bichon Frise": ["Tibetan Spaniel","Tibetan Terrier","English Toy Spaniel","Border Terrier","Siberian Husky"],
+    "Irish Setter": ["Chesapeake Bay Retriever","Gordon Setter","English Setter","Welsh Springer Spaniel","German Shorthaired Pointer"],
+    "Samoyed": ["Welsh Springer Spaniel","Giant Schnauzer","Siberian Husky","Chesapeake Bay Retriever","Gordon Setter"],
+    "Shih Tzu": ["Pekingese","Papillon","Affenpinscher","Beagle","Cavalier King Charles Spaniel"],
+    "Golden Retriever": ["Labrador Retriever","Welsh Springer Spaniel","English Cocker Spaniel","English Springer Spaniel","Brittany"],
+    "Chesapeake Bay Retriever": ["Gordon Setter","Welsh Springer Spaniel","German Shorthaired Pointer","Pointer","Irish Setter"],
+    "Papillon": ["Shetland Sheepdog","Shih Tzu","Affenpinscher","Cavalier King Charles Spaniel","Pomeranian"],
+    "Gordon Setter": ["Chesapeake Bay Retriever","Welsh Springer Spaniel","German Shorthaired Pointer","Pointer","Irish Setter"],
+    "English Setter": ["Irish Setter","Chesapeake Bay Retriever","Gordon Setter","Welsh Springer Spaniel","English Springer Spaniel"],
+    "Pug": ["Lhasa Apso","Chihuahua","Old English Sheepdog","French Bulldog","Brussels Griffon"],
+    "Affenpinscher": ["Border Terrier","Australian Terrier","English Toy Spaniel","Brussels Griffon","Yorkshire Terrier"],
+    "Miniature Schnauzer": ["Border Terrier","Cairn Terrier","Cocker Spaniel","West Highland White Terrier","Affenpinscher"],
+    "Beagle": ["Basset Hound","Shih Tzu","Pomeranian","Dachshund","Basenji"],
+    "Border Collie": ["Australian Cattle Dog","Shetland Sheepdog","Labrador Retriever","Golden Retriever","Poodle"],
+    "Australian Terrier": ["Border Terrier","Cairn Terrier","Affenpinscher","Dandie Dinmont Terrier","Norfolk Terrier"],
+    "Whippet": ["Saluki","Siberian Husky","Pharaoh Hound","English Cocker Spaniel","Brittany"],
+    "Boston Terrier": ["Siberian Husky","Tibetan Spaniel","Bichon Frise","Whippet","Dalmatian"],
+    "Briard": ["Bouvier des Flandres","Chesapeake Bay Retriever","Gordon Setter","Giant Schnauzer","Welsh Springer Spaniel"],
+    "Bedlington Terrier": ["West Highland White Terrier","Cavalier King Charles Spaniel","Border Terrier","Cairn Terrier","Tibetan Spaniel"],
+    "Cavalier King Charles Spaniel": ["Bedlington Terrier","English Toy Spaniel","West Highland White Terrier","Tibetan Spaniel","Bichon Frise"],
+    "Dalmatian": ["Welsh Springer Spaniel","Samoyed","Boston Terrier","Flat-Coated Retriever","Poodle"],
+    "Flat-Coated Retriever": ["English Cocker Spaniel","Brittany","English Springer Spaniel","Clumber Spaniel","Siberian Husky"],
+    "Belgian Tervuren": ["German Shorthaired Pointer","Briard","Bouvier des Flandres","Pembroke Welsh Corgi","Bernese Mountain Dog"],
+    "Basset Hound": ["Beagle","Shih Tzu","Dachshund","Basenji","Afghan Hound"],
+    "Poodle": ["Labrador Retriever","Golden Retriever","Border Collie","Boston Terrier","Dalmatian"],
+    "Staffordshire Bull Terrier": ["Siberian Husky","Welsh Springer Spaniel","West Highland White Terrier","Pointer","Samoyed"],
+    "Bouvier des Flandres": ["Briard","Chesapeake Bay Retriever","Gordon Setter","Giant Schnauzer","Welsh Springer Spaniel"],
+    "Pembroke Welsh Corgi": ["Cocker Spaniel","Shetland Sheepdog","Miniature Schnauzer","Belgian Tervuren","Pomeranian"],
+    "Clumber Spaniel": ["Welsh Springer Spaniel","English Cocker Spaniel","Brittany","Flat-Coated Retriever","Pharaoh Hound"],
+    "Pomeranian": ["Maltese","Cocker Spaniel","Shih Tzu","Papillon","Affenpinscher"],
+    "Australian Shepherd": ["Siberian Husky","Border Collie","Whippet","Boston Terrier","Staffordshire Bull Terrier"],
+    "Pharaoh Hound": ["Whippet","Clumber Spaniel","Saluki","Border Terrier","Siberian Husky"],
+    "Dandie Dinmont Terrier": ["Norfolk Terrier","Border Terrier","Australian Terrier","Tibetan Terrier","English Toy Spaniel"],
+    "Greyhound": ["Irish Wolfhound","Rhodesian Ridgeback","Pointer","Whippet","Saluki"],
+    "Saluki": ["Whippet","Siberian Husky","Pharaoh Hound","English Cocker Spaniel","Brittany"],
+    "Australian Cattle Dog": ["Border Collie","Old English Sheepdog","Welsh Springer Spaniel","Shetland Sheepdog","Labrador Retriever"],
+    "Tibetan Terrier": ["Lhasa Apso","Tibetan Spaniel","Bichon Frise","Dandie Dinmont Terrier","Norfolk Terrier"],
+    "Norfolk Terrier": ["Dandie Dinmont Terrier","Border Terrier","Australian Terrier","Tibetan Terrier","Brussels Griffon"],
+    "Dachshund": ["West Highland White Terrier","Tibetan Spaniel","Bichon Frise","Beagle","Whippet"],
+    "Chihuahua": ["Brussels Griffon","Maltese","Italian Greyhound","Pekingese","Lhasa Apso"],
+    "Doberman Pinscher": ["Rottweiler","Newfoundland","Bernese Mountain Dog","Giant Schnauzer","Bullmastiff"],
+    "English Toy Spaniel": ["Tibetan Spaniel","Bichon Frise","Affenpinscher","Cavalier King Charles Spaniel","Dandie Dinmont Terrier"],
+    "Newfoundland": ["Giant Schnauzer","Irish Setter","Samoyed","Chesapeake Bay Retriever","Gordon Setter"],
+    "Basenji": ["Beagle","Whippet","Basset Hound","Pharaoh Hound","Saluki"],
+    "Afghan Hound": ["Borzoi","Bloodhound","Beagle","Whippet","Basset Hound"],
+    "Old English Sheepdog": ["Australian Cattle Dog","Welsh Springer Spaniel","Samoyed","Pug","Border Collie"],
+    "French Bulldog": ["Tibetan Terrier","Siberian Husky","English Cocker Spaniel","Lhasa Apso","Brittany"],
+    "Bernese Mountain Dog": ["German Shorthaired Pointer","Belgian Tervuren","Doberman Pinscher","Newfoundland","Giant Schnauzer"],
+    "Boxer": ["Siberian Husky","Samoyed","Whippet","Boston Terrier","Staffordshire Bull Terrier"],
+    "Brussels Griffon": ["Maltese","Italian Greyhound","Border Terrier","Affenpinscher","Dandie Dinmont Terrier"],
+    "Maltese": ["Brussels Griffon","Pomeranian","Chihuahua","Italian Greyhound","Lhasa Apso"],
+    "Giant Schnauzer": ["Samoyed","Chesapeake Bay Retriever","Gordon Setter","Briard","Bouvier des Flandres"],
+    "Rottweiler": ["Doberman Pinscher","Newfoundland","Bernese Mountain Dog","Giant Schnauzer","Bullmastiff"],
+    "Yorkshire Terrier": ["Affenpinscher","Border Terrier","Cairn Terrier","Shih Tzu","Papillon"],
+    "Irish Wolfhound": ["Greyhound","Rhodesian Ridgeback","Pointer","Whippet","Saluki"],
+    "Scottish Terrier": ["Dandie Dinmont Terrier","Norfolk Terrier","Border Terrier","Cairn Terrier","Lhasa Apso"],
+    "Bullmastiff": ["Saint Bernard","Doberman Pinscher","Newfoundland","Bernese Mountain Dog","Giant Schnauzer"],
+    "German Shepherd": ["Shetland Sheepdog","Border Collie","Briard","Belgian Tervuren","Bouvier des Flandres"],
+    "Mastiff": ["Doberman Pinscher","Newfoundland","Afghan Hound","Bernese Mountain Dog","Giant Schnauzer"],
+    "Great Dane": ["Alaskan Malamute","Akita","Siberian Husky","Pointer","Greyhound"],
+    "Kerry Blue Terrier": ["Border Terrier","Cairn Terrier","Welsh Springer Spaniel","Samoyed","Australian Terrier"],
+    "Italian Greyhound": ["Brussels Griffon","Affenpinscher","Dandie Dinmont Terrier","Tibetan Terrier","Norfolk Terrier"],
+    "Pekingese": ["Shih Tzu","Chihuahua","Papillon","Affenpinscher","Beagle"],
+    "Rhodesian Ridgeback": ["Greyhound","Irish Wolfhound","Pointer","Whippet","Saluki"],
+    "Bull Terrier": ["Pug","Staffordshire Bull Terrier","Dandie Dinmont Terrier","Norfolk Terrier","Old English Sheepdog"],
+    "Saint Bernard": ["Bullmastiff","Doberman Pinscher","Newfoundland","Bernese Mountain Dog","Giant Schnauzer"],
+    "Borzoi": ["Afghan Hound","Bloodhound","Beagle","Whippet","Basset Hound"],
+    "Alaskan Malamute": ["Great Dane","Akita","Siberian Husky","Pointer","Greyhound"],
+    "Bloodhound": ["Afghan Hound","Borzoi","Beagle","Basset Hound","Greyhound"],
+    "Chow Chow": ["Bulldog","Boston Terrier","Dalmatian","Poodle","Basenji"],
+    "Akita": ["Pointer","Giant Schnauzer","Great Dane","Alaskan Malamute","Siberian Husky"],
+    "Bulldog": ["Chow Chow","Boston Terrier","Dalmatian","Poodle","Basenji"]
+};
+
+// --------------------------------------------
+// Populate dropdown
+// --------------------------------------------
+const dropdown = document.getElementById("breedDropdown");
+Object.keys(similarityData).sort().forEach(breed => {
+    const option = document.createElement("option");
+    option.value = breed;
+    option.textContent = breed;
+    dropdown.appendChild(option);
+});
+
+// --------------------------------------------
+// Handle selection
+// --------------------------------------------
+dropdown.addEventListener("change", () => {
+    const breed = dropdown.value;
+    const resultsDiv = document.getElementById("results");
+
+    if (!breed) { resultsDiv.innerHTML = ""; return; }
+
+    const similars = similarityData[breed];
+
+    let html = `<h3>Top 5 Similar Breeds to ${breed}:</h3><ul>`;
+    similars.forEach(s => html += `<li>${s}</li>`);
+    html += "</ul>";
+
+    resultsDiv.innerHTML = html;
+});
+</script>
+
+</body>
+</html>
+'''
+)
